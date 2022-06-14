@@ -1,0 +1,55 @@
+/* Total amount of Deposit transactions */
+SELECT SUM(amount) as 'Total amount of Deposit' 
+FROM transaction
+WHERE type = 'Deposit';
+
+/* list of transactions from (09-01-29 to 09-30-29) for acct 1111222233331441 */
+SELECT id, amount, tdate, type
+FROM transaction 
+WHERE account_num= 1111222233331441
+AND tdate between '2019-09-01' and '2019-09-30';
+
+/* balance of acct 1111222233331441 before (not including) 09-01-2019*/
+SELECT SUM(amount) as 'Balance'
+FROM transaction
+WHERE account_num= 1111222233331441
+AND tdate < '2019-09-01';
+
+/* customer name that deposited highest amount in one transaction*/
+SELECT customer.name,transaction.amount 
+FROM((customer INNER JOIN account ON customer.ssn = account.owner_ssn) 
+INNER JOIN transaction ON account.number = transaction.account_num) 
+WHERE transaction.amount = (SELECT max(amount) 
+FROM transaction);
+
+/* oners name o al male customers with a checking acct*/
+SELECT name
+FROM customer LEFT JOIN ACCOUNT ON Customer.ssn = Account.owner_ssn
+WHERE sex = 'M' AND type ='Checking';
+
+/*all accts associate with 'Alexander Felix'*/
+SELECT number, type
+FROM account LEFT JOIN customer ON Account.owner_ssn = Customer.ssn
+WHERE name= 'Alexander Felix';
+
+/*compute accts prev bal and return table*/
+SELECT name, Account.number, Account.type ,SUM(amount) 
+FROM CUSTOMER LEFT JOIN ACCOUNT ON Account.owner_ssn=Customer.ssn 
+LEFT JOIN transaction ON Account.number= transaction.account_num 
+WHERE name="Alexander Felix";
+
+
+/* customer name whose transaction =< 100*/
+SELECT name,sum(amount) 
+FROM customer INNER JOIN  account
+ON customer.ssn=account.owner_ssn
+INNER JOIN transaction ON account.number=transaction.account_num
+GROUP BY name
+HAVING SUM(amount)>1000;
+
+/* customer name that have at least 2 deposit transactions */
+SELECT name from customer,account,transaction
+WHERE customer.ssn=account.owner_ssn and
+account.number=transaction.account_num AND transaction.type='Deposit'
+GROUP BY name
+HAVING COUNT(account_num)>=2;
